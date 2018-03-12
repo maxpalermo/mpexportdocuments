@@ -1,2 +1,2 @@
-# mpexportdocuments
-Prestashop module for exporting documents in xml format
+# mpexportinvoices
+Export prestashop invoices in XML format
