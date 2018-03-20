@@ -23,6 +23,8 @@
  *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  *  International Registered Trademark & Property of mpSOFT
  */
+require_once dirname(__FILE__) . '/CustomController.php';
+require_once dirname(__FILE__) . '/DisplayHelperList.php';
 
 class AdminMpExportDocumentsController extends ModuleAdminController
 {
@@ -49,11 +51,6 @@ class AdminMpExportDocumentsController extends ModuleAdminController
         $this->link = Context::getContext()->link;
         $this->id_lang = (int) Context::getContext()->language->id;
         $this->id_shop = (int) Context::getContext()->shop->id;
-    }
-    
-    public function initToolbar()
-    {
-        parent::initToolbar();
     }
     
     public function ajaxProcessGetTranslation()
@@ -92,25 +89,67 @@ class AdminMpExportDocumentsController extends ModuleAdminController
         );
     }
     
+    public function ajaxProcessExportSelected()
+    {
+        require_once 'Export.php';
+        $export = new ExportToXML(Tools::getValue('list_of_ids', array()), Tools::getValue('type', ''));
+        $content = $export->export();
+        print $content;
+        exit();
+    }
+    
+    public function getCustomController($name, $folder='admin')
+    {
+        //Include filename
+        require_once $this->module->getPath().'controllers/'.$folder.'/'.$name.'.php';
+        //Build controller name
+        $controller_name = get_class($this->module).$name.'Controller';
+        //Instantiate controller
+        $controller = new $controller_name($this);
+        //Return controller
+        return $controller;
+    }
+    
     public function initContent()
     {
+        $this->helperlistContent = '';
+        $this->messages = array();
+        $this->date_start = '';
+        $this->date_end = '';
+        
+        /**
+         * CHECK AJAX CALLS
+         */
         if (Tools::isSubmit('ajax') && !empty(Tools::getValue('action'))) {
             $action = 'ajaxProcess' . Tools::getValue('action');
             print $this->$action();
             exit();
         }
         
-        $this->helperlistContent = '';
-        $this->messages = array();
-        $this->date_start = '';
-        $this->date_end = '';
+        /**
+         * GET LIST
+         */
         if (Tools::isSubmit('submitForm')) {
-            $content = $this->getHelperListContent();
-            $this->helperlistContent = $this->initHelperList($content);
-        } elseif (Tools::isSubmit('submitBulkexportorders')) {
-            $this->messages = $this->processBulkExport();
-            exit();
+            /**
+             * GET DATA CONTENT
+             */
+            $this->date_start = Tools::getValue('input_text_date_start');
+            $this->date_end = Tools::getValue('input_text_date_end');
+            $type = Tools::getValue('input_select_type_document');
+            $contentController = $this->getCustomController($type);
+            $params = array(
+                'date_start' => $this->date_start,
+                'date_end' => $this->date_end,
+                'action' => 'Display',
+                'pagination' => 30,
+                'current_page' => 1,
+                'controller_name' => $this->name,
+            );
+            $this->helperlistContent = $contentController->run($params);
         }
+        /**
+         * INITIALIZE CONTENT
+         */
         $this->helperformContent = $this->initHelperForm();
         $this->content = implode('<br>', $this->messages) 
             . $this->helperformContent 
@@ -498,8 +537,16 @@ class AdminMpExportDocumentsController extends ModuleAdminController
     
     protected function processBulkExport()
     {
-        $orders = Tools::getValue('ordersBox');
-        $this->exportInvoices($orders);
+        $invoices = Tools::getValue('ordersBox');
+        $controller = $this->getCustomController('Invoices');
+        $export = $controller->run(
+            array(
+                'action' => 'ExportInvoices',
+                'ids' => $invoices,
+            )
+        );
+        
+        return $export;
     }
     
     private function initFieldsList()
@@ -559,6 +606,14 @@ class AdminMpExportDocumentsController extends ModuleAdminController
             'export' => array(
                 'href' => 'javascript:exportSelectedDocuments();',
                 'desc' => $this->l('Export selected'),
+            ),
+            'toggle-on' => array(
+                'href' => 'javascript:toggleAllBoxes();',
+                'desc' => $this->l('Select all'),
+            ),
+            'toggle-off' => array(
+                'href' => 'javascript:toggleNoneBoxes();',
+                'desc' => $this->l('Select none'),
             )
         );
         $helper->title = $this->l('Documents List');
@@ -671,23 +726,23 @@ class AdminMpExportDocumentsController extends ModuleAdminController
                 'name' => $this->l('Please select a type document'),
             ),
             array(
-                'id' => 'order',
+                'id' => 'Orders',
                 'name' => $this->l('Orders'),
             ),
             array(
-                'id' => 'invoice',
+                'id' => 'Invoices',
                 'name' => $this->l('Invoices'),
             ),
             array(
-                'id' => 'return',
+                'id' => 'Returns',
                 'name' => $this->l('Returns'),
             ),
             array(
-                'id' => 'slip',
+                'id' => 'Slips',
                 'name' => $this->l('Delivery slip'),
             ),
             array(
-                'id' => 'delivery',
+                'id' => 'Deliveries',
                 'name' => $this->l('Delivery'),
             ),
         );

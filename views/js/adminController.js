@@ -58,8 +58,8 @@ function exportSelectedDocuments()
     });
     
     jConfirm(translation, title, function(r){
-        var boxes = getSelectedBoxes();
         if (r===true) {
+            var boxes = getSelectedBoxes();
             $.ajax({
                 type: 'POST',
                 dataType: 'json',
@@ -67,25 +67,71 @@ function exportSelectedDocuments()
                 data: 
                 {
                     ajax: true,
-                    action: 'exportSelected',
-                    boxes: boxes
+                    action: 'ExportSelected',
+                    list_of_ids: boxes,
+                    type: $('#input_select_type_document').val()
                 }
             })
             .done(function(json){
-                if (json.result === true) {
-                    alert('EXPORTED!!');
-                } else {
-                    alert('FAIL!');
-                }
+                createXML(json.content);
             })
             .fail(function(){
                 jAlert('AJAX ERROR');
             });
         }
     });
+}
     
-    function getSelectedBoxes()
-    {
-        return [];
-    }
+function createXML(content)
+{
+    var xmltext = content;
+    //var pom = document.createElement('a');
+
+    var filename = "export_documents_" +  formatDate(Date.now()) + ".xml";
+    var pom = document.createElement('a');
+    var bb = new Blob([xmltext], {type: 'text/plain'});
+
+    pom.setAttribute('href', window.URL.createObjectURL(bb));
+    pom.setAttribute('download', filename);
+
+    pom.dataset.downloadurl = ['text/plain', pom.download, pom.href].join(':');
+    pom.draggable = true; 
+    pom.classList.add('dragout');
+
+    pom.click();
+}
+    
+function formatDate(date) 
+{
+    var d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear(),
+        hour = d.getHours(),
+        minutes = d.getMinutes(),
+        seconds = d.getSeconds();
+
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+    if (hour.length <2) hour = '0' + hour;
+    if (minutes.length <2) minutes = '0' + hour;
+    if (seconds.length <2) seconds = '0' + hour;
+
+    return [year, month, day, hour, minutes, seconds].join('');
+}
+    
+function getSelectedBoxes()
+{
+    var output = [];
+    $('input[name="chkBoxes[]"]:checked').each(function(){
+        output.push(this.value);
+    });
+    return output;
+}
+    
+function toggleAllBoxes(toggle)
+{
+    $('input[name="chkBoxes[]"]').each(function(){
+        this.checked = toggle;
+    });
 }
