@@ -128,12 +128,25 @@ class MpExportDocumentsSlipsController extends MpCustomController
             
             $result = $db->executeS($sql);
             if ($result) {
-                return $result;
+                $total = 0;
+                foreach ($result as $row) {
+                    $total += $row['document_total_amount'];
+                }
+                return array(
+                    'total' => $total,
+                    'result' => $result,
+                );
             } else {
-                return array();
+                return array(
+                    'total' => 0,
+                    'result' => array(),
+                );
             }   
         } else {
-            return array();
+            return array(
+                    'total' => 0,
+                    'result' => array(),
+                );
         }
     }
     

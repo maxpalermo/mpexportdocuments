@@ -116,6 +116,7 @@ class AdminMpExportDocumentsController extends ModuleAdminController
         $this->messages = array();
         $this->date_start = '';
         $this->date_end = '';
+        $this->total_document = 0;
         
         /**
          * CHECK AJAX CALLS
@@ -145,7 +146,9 @@ class AdminMpExportDocumentsController extends ModuleAdminController
                 'current_page' => 1,
                 'controller_name' => $this->name,
             );
-            $this->helperlistContent = $contentController->run($params);
+            $result = $contentController->run($params);
+            $this->helperlistContent = $result['helperlist'];
+            $this->total_document = $result['total'];
         }
         /**
          * INITIALIZE CONTENT
@@ -209,6 +212,10 @@ class AdminMpExportDocumentsController extends ModuleAdminController
                             'name' => 'name',
                         ),
                     ),
+                    array(
+                        'type' => 'hidden',
+                        'name' => 'input_hidden_total_documents',
+                    ),
                 ),
                 'submit' => array(
                     'title' => $this->l('Get'),
@@ -234,6 +241,7 @@ class AdminMpExportDocumentsController extends ModuleAdminController
                     $output[$key] = $value;
                 }
             }
+            $output['input_hidden_total_documents'] = sprintf("%s: %s",$this->l('Total'),Tools::displayPrice($this->total_document));
             $helper->tpl_vars = array(
                 'fields_value' => $output,
                 'languages' => $this->context->controller->getLanguages(),
@@ -244,6 +252,7 @@ class AdminMpExportDocumentsController extends ModuleAdminController
                     'input_text_date_start' => '',
                     'input_text_date_end' => '',
                     'input_select_type_document' => 0,
+                    'input_hidden_total_documents' => sprintf("%s: %s",$this->l('Total'),Tools::displayPrice($this->total_document)),
                 ),
                 'languages' => $this->context->controller->getLanguages(),
             );

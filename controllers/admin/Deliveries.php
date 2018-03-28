@@ -104,7 +104,7 @@ class MpExportDocumentsDeliveriesController extends MpCustomController
         $sql = new DbQueryCore();
         if ($isStartDate || $isEndDate) {
             $fieldsArray = array(
-                'i.id_order_invoice as document_id',
+                'distinct i.id_order_invoice as document_id',
                 'i.delivery_date as document_date',
                 'i.delivery_number as document_number',
                 'i.total_paid_tax_incl as document_total',
@@ -120,9 +120,11 @@ class MpExportDocumentsDeliveriesController extends MpCustomController
                 ->innerJoin('orders', '`o`', 'i.id_order=o.id_order')
                 ->innerJoin('customer', '`c`', 'c.id_customer=o.id_customer')
                 ->innerJoin('order_state_lang', 'osl', 'osl.id_order_state=o.current_state')
+                ->innerJoin('address', '`a`', 'a.id_customer=c.id_customer')
                 ->where('osl.id_lang='.(int) Context::getContext()->language->id)
                 ->where('o.current_state != 6')
                 ->where('i.delivery_number>0')
+                ->where('a.vat_number=\'\' or a.vat_number is null')
                 ->orderBy('i.delivery_date')
                 ->orderBy('i.delivery_number');
 
@@ -130,12 +132,25 @@ class MpExportDocumentsDeliveriesController extends MpCustomController
             
             $result = $db->executeS($sql);
             if ($result) {
-                return $result;
+                $total = 0;
+                foreach ($result as $row) {
+                    $total += $row['document_total'];
+                }
+                return array(
+                    'total' => $total,
+                    'result' => $result,
+                );
             } else {
-                return array();
+                return array(
+                    'total' => 0,
+                    'result' => array(),
+                );
             }   
         } else {
-            return array();
+            return array(
+                    'total' => 0,
+                    'result' => array(),
+                );
         }
     }
     

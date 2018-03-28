@@ -66,7 +66,9 @@ abstract class MpCustomController
             )
         ) + $this->getFieldsList();
         
-        $fields_data = $this->getFieldsData($params);
+        $result = $this->getFieldsData($params);
+        $fields_data = $result['result'];
+        $total = $result['total'];
         foreach ($fields_data as &$row) {
             $row = array(
                 'checkbox' => '<input type="checkbox" name="chkBoxes[]" value="' . $row['document_id'] . '">') +
@@ -76,7 +78,11 @@ abstract class MpCustomController
         $helperlist = new DisplayHelperList();
         $helperlist->fields_list = $fields_list;
         $helperlist->fields_data = $fields_data;
-        return $helperlist->display($params);
+        return array(
+            'total' => $total,
+            'helperlist' => $helperlist->display($params),
+        );
+        
     }
     
     public abstract function getFieldsList();

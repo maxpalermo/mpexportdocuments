@@ -63,7 +63,6 @@ class MpExportDocuments extends Module
 
         if (!parent::install() 
                 || !$this->registerHook('displayBackOfficeHeader')
-                || !$this->registerHook('displayAdminOrderContentOrder')
                 || !$this->registerHook('displayHeader')
                 || !$this->installTab('MpModules', $this->adminClassName, $this->l('MP Documents export'))
         ) {
@@ -186,16 +185,6 @@ class MpExportDocuments extends Module
             $ctrl->addJs($this->_path . 'views/js/getContent.js');
         }
 	}
-    
-    public function hookDisplayAdminOrderContentOrder($params)
-    {
-        $this->context->smarty->assign(
-                'mpexport_link',
-                $this->context->link->getAdminLink('AdminMpExportInvoices')
-                . '&id_order='. $params['order']->id
-        );
-        return $this->display(__FILE__, 'toolBar.tpl');
-    }
     
     public function getContent()
     {

@@ -26,6 +26,12 @@
 * to avoid any conflicts with others containers.
 */
 
+
+$(document).ready(function(){
+    let total = $('input[name="input_hidden_total_documents').val();
+    $('#form-expdoc .panel-heading .badge').after('<span class="badge">' + total + '</span>');
+});
+
 function exportSelectedDocuments()
 {
     var title = 'Confirm';
@@ -46,7 +52,6 @@ function exportSelectedDocuments()
     })
     .done(function(json){
         if (json.result === true) {
-            console.log(json.translation + '\n' + json.title);
             translation = json.translation;
             title = json.title;
         } else {
@@ -114,8 +119,8 @@ function formatDate(date)
     if (month.length < 2) month = '0' + month;
     if (day.length < 2) day = '0' + day;
     if (hour.length <2) hour = '0' + hour;
-    if (minutes.length <2) minutes = '0' + hour;
-    if (seconds.length <2) seconds = '0' + hour;
+    if (minutes.length <2) minutes = '0' + minutes;
+    if (seconds.length <2) seconds = '0' + seconds;
 
     return [year, month, day, hour, minutes, seconds].join('');
 }

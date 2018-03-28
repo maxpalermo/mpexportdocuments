@@ -39,16 +39,6 @@ $_MODULE['<{mpexportdocuments}prestashop>mpexportdocuments_7c51e783fc19e64c4eff2
 $_MODULE['<{mpexportdocuments}prestashop>mpexportdocuments_5f1d5e75ac0b1069765bd3c34cd103d5'] = 'Scegli un metodo di pagamento';
 $_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_74dd1e5e3379fa1cd0f48479fff9b9ba'] = 'Esposrate i prodotti selezionati?';
 $_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_70d9be9b139893aa6c69b5e77e614311'] = 'Conferma';
-$_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_d2efa6c05a9993a5178f60a5b6d462c9'] = 'Seleziona un tipo di documento valido';
-$_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_c96280f76032df218d08eebbb62f8696'] = 'Seleziona una data valida';
-$_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_490aa6e856ccf208a054389e47ce0d06'] = 'Id';
-$_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_44749712dbec183e983dcd78a7736c41'] = 'Data';
-$_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_b2ee912b91d69b435159c7c3f6df7f5f'] = 'Numero';
-$_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_ce26601dac0dea138b7295f02b7620a7'] = 'Cliente';
-$_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_96b0141273eabab320119c467cdcaf17'] = 'Totale';
-$_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_d4f39d7e50684fca5f5a817cb7342f3e'] = 'Esporta i selezionati';
-$_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_b35420083201c5920a46a1461f0a8e6d'] = 'Lista documenti';
-$_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_3ea4443adc44e4f48425ddd651012394'] = 'Continuare con questa operazione?';
 $_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_1a7c21d1e5895f36d2a2e15fd05f1c1a'] = 'Configurazione di esportazione';
 $_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_4d34f1097f6c8b9cee28bca8b78bbee9'] = 'Data inizio';
 $_MODULE['<{mpexportdocuments}prestashop>adminmpexportdocuments_e5d4291480b213d93b7725359e0a9976'] = 'Inserisci la data iniziale';

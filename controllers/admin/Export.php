@@ -134,11 +134,14 @@ class ExportToXML
         {
             $order = new OrderCore($id);
             
-            $out = array('order' => array(
+            $out = array('invoice' => array(
                 'document_type' => ConfigurationCore::get('mpexpdoc_input_id_order'),
                 'order_id' => $order->id,
                 'order_date' => $order->date_add,
                 'order_reference' => $order->reference,
+                'invoice_id' => 0,
+                'invoice_date' => '',
+                'invoice_number' => 0,
                 'discount_tax_excl' => $order->total_discounts_tax_excl,
                 'products_tax_excl' => $order->total_products,
                 'shipping_tax_excl' => $order->total_shipping_tax_excl,
@@ -167,14 +170,15 @@ class ExportToXML
             $document = new OrderReturnCore($id);
             $order = new OrderCore($document->id_order);
             
-            $out = array('return' => array(
+            $out = array('invoice' => array(
                 'document_type' => ConfigurationCore::get('mpexpdoc_input_id_return'),
                 'order_id' => $order->id,
                 'order_date' => $order->date_add,
                 'order_reference' => $order->reference,
-                'return_id'=> $document->id,
-                'return_date' => $document->date_add,
-                'return_question' => $document->question,
+                'invoice_id'=> $document->id,
+                'invoice_date' => $document->date_add,
+                'invoice_number' => 0,
+                'invoice_question' => $document->question,
                 'customer' => $this->getCustomer($order->id_customer, $order->id_address_delivery, $order->id_address_invoice),
                 'rows' => $this->getRows($document->id, 'returns'),
                 'fees' => array(),
@@ -195,14 +199,14 @@ class ExportToXML
             $document = new OrderSlipCore($id);
             $order = new OrderCore($document->id_order);
             
-            $out = array('slip' => array(
+            $out = array('invoice' => array(
                 'document_type' => ConfigurationCore::get('mpexpdoc_input_id_slip'),
                 'order_id' => $order->id,
                 'order_date' => $order->date_add,
                 'order_reference' => $order->reference,
-                'slip_id'=> $document->id,
-                'slip_number' => $document->id,
-                'slip_date' => $document->date_add,
+                'invoice_id'=> $document->id,
+                'invoice_numberr' => $document->id,
+                'invoice_date' => $document->date_add,
                 'products_tax_excl' => $document->total_products_tax_excl,
                 'shipping_tax_excl' => $document->total_shipping_tax_excl,
                 'total_tax_excl' => $document->total_products_tax_excl + $document->total_shipping_tax_excl,
@@ -230,14 +234,14 @@ class ExportToXML
             $document = new OrderInvoiceCore($id);
             $order = new OrderCore($document->id_order);
             
-            $out = array('delivery' => array(
+            $out = array('invoice' => array(
                 'document_type' => ConfigurationCore::get('mpexpdoc_input_id_delivery'),
                 'order_id' => $order->id,
                 'order_date' => $order->date_add,
                 'order_reference' => $order->reference,
-                'delivery_id'=> $document->id,
-                'delivery_number' => $document->delivery_number,
-                'delivery_date' => $document->delivery_date,
+                'invoice_id'=> $document->id,
+                'invoice_number' => $document->delivery_number,
+                'invoice_date' => $document->delivery_date,
                 'products_tax_excl' => $document->total_products,
                 'shipping_tax_excl' => $document->total_shipping_tax_excl,
                 'total_tax_excl' => $document->total_products + $document->total_shipping_tax_excl,
@@ -246,7 +250,7 @@ class ExportToXML
                     ($document->total_products + $document->total_shipping_tax_excl),       
                 'total_tax_incl' => $document->total_products_wt + $document->total_shipping_tax_incl,
                 'customer' => $this->getCustomer($order->id_customer, $order->id_address_delivery, $order->id_address_invoice),
-                'rows' => $this->getRows($document->id, 'slips'),
+                'rows' => $this->getRows($document->id, 'deliveries'),
                 'fees' => $this->getFees($document->id_order),
                 ),
             );
@@ -415,12 +419,13 @@ class ExportToXML
     public function getCustomer($id_customer, $id_address_delivery, $id_address_invoice)
     {
         $customer = new CustomerCore($id_customer);
+        $gender = new GenderCore($customer->id_gender);
         $content = array(
-            'id' => ConfigurationCore::get('mpexpdoc_customer_prefix').$customer->id,
-            'gender' => $customer->id_gender,
+            'id' => ConfigurationCore::get('mpexpdoc_input_customer_prefix').$customer->id,
+            'gender' => $gender->name[Context::getContext()->language->id],
             'firstname' => $customer->firstname,
             'lastname' => $customer->lastname,
-            'email' => $customer->email,
+            'email' => Tools::strtolower($customer->email),
             'birthday' => $customer->birthday,
             'address_delivery' => $this->getAddress($id_address_delivery),
             'address_invoice' => $this->getAddress($id_address_invoice),
@@ -472,7 +477,7 @@ class ExportToXML
     
     public function exportXmlDocument($type)
     {
-        $header = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><'.$type.'></'.$type.'>');
+        $header = new SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><invoices></invoices>');
         foreach ($this->content as $document) {
             foreach ($document as $key=>$content) {
                 $doc = $header->addChild($key);
