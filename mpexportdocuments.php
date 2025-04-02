@@ -1,29 +1,23 @@
 <?php
+
 /**
- * 2017 mpSOFT
+ * Copyright since 2007 PrestaShop SA and Contributors
+ * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
  *
  * NOTICE OF LICENSE
  *
- * This source file is subject to the Academic Free License (AFL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
+ * This source file is subject to the Academic Free License version 3.0
+ * that is bundled with this package in the file LICENSE.md.
  * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/afl-3.0.php
+ * https://opensource.org/licenses/AFL-3.0
  * If you did not receive a copy of the license and are unable to
  * obtain it through the world-wide-web, please send an email
  * to license@prestashop.com so we can send you a copy immediately.
  *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
- * versions in the future. If you wish to customize PrestaShop for your
- * needs please refer to http://www.prestashop.com for more information.
- *
- *  @author    Massimiliano Palermo <info@mpsoft.it>
- *  @copyright 2018 Digital Solutions®
- *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- *  International Registered Trademark & Property of mpSOFT
+ * @author    Massimiliano Palermo <maxx.palermo@gmail.com>
+ * @copyright Since 2016 Massimiliano Palermo
+ * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
  */
-
 if (!defined('_PS_VERSION_')) {
     exit;
 }
@@ -31,432 +25,206 @@ if (!defined('_PS_VERSION_')) {
 class MpExportDocuments extends Module
 {
     protected $id_lang;
-    protected $id_shop;
-    protected $adminClassName = 'AdminMpExportDocuments';
-    protected $link;
-    
+
     public function __construct()
     {
         $this->name = 'mpexportdocuments';
         $this->tab = 'administration';
         $this->version = '1.0.0';
-        $this->author = 'Digital Solutions®';
+        $this->author = 'Massimiliano Palermo';
         $this->need_instance = 0;
-        $this->ps_versions_compliancy = array('min' => '1.6', 'max' => _PS_VERSION_);
         $this->bootstrap = true;
+        $this->ps_versions_compliancy = [
+            'min' => '8.0.0',
+            'max' => _PS_VERSION_,
+        ];
 
         parent::__construct();
 
-        $this->displayName = $this->l('MP Export Documents');
-        $this->description = $this->l('Export Documents in XML format');
-        $this->confirmUninstall = $this->l('Are you sure you want to uninstall?');
-        $this->id_lang = (int)Context::getContext()->language->id;
-        $this->link = Context::getContext()->link;
-        $this->id_shop = (int)Context::getContext()->shop->id;
+        $this->displayName = $this->trans('MP Export Documents', [], 'Modules.Mpexportdocuments.Admin');
+        $this->description = $this->trans('Export documents in XML format.', [], 'Modules.Mpexportdocuments.Admin');
+        $this->id_lang = (int) $this->context->language->id;
     }
-    
+
     public function install()
     {
-        if (Shop::isFeatureActive()) {
-            Shop::setContext(Shop::CONTEXT_ALL);
-        }
-
-        if (!parent::install() 
-                || !$this->registerHook('displayBackOfficeHeader')
-                || !$this->registerHook('displayHeader')
-                || !$this->installTab('MpModules', $this->adminClassName, $this->l('MP Documents export'))
-        ) {
-            return false;
-        }
-        return true;
+        return parent::install()
+            && $this->registerHook('actionAdminControllerSetMedia')
+            && $this->registerHook('displayAdminEndContent');
     }
-      
+
     public function uninstall()
     {
-        if (!parent::uninstall() || !$this->uninstallTab($this->adminClassName)) {
-            return false;
-        }
-        return true;
+        return parent::uninstall();
     }
-    
-    /**
-     * Install Main Menu
-     * @return int Main menu id
-     */
-    public function installMainMenu()
+
+    public function renderWidget($hookName, array $configuration)
     {
-        $id_mp_menu = (int) TabCore::getIdFromClassName('MpModules');
-        if ($id_mp_menu == 0) {
-            $tab = new TabCore();
-            $tab->active = 1;
-            $tab->class_name = 'MpModules';
-            $tab->id_parent = 0;
-            $tab->module = null;
-            $tab->name = array();
-            foreach (Language::getLanguages(true) as $lang) {
-                $tab->name[$lang['id_lang']] = $this->l('MP Modules');
-            }
-            $id_mp_menu = $tab->add();
-            if ($id_mp_menu) {
-                PrestaShopLoggerCore::addLog('id main menu: '.(int)$id_mp_menu);
-                return (int)$tab->id;
-            } else {
-                PrestaShopLoggerCore::addLog('id main menu error');
-                return false;
-            }
+        switch ($hookName) {
+            case 'displayAdminOrderMain':
+            case 'displayAdminOrderSide':
+            case 'displayAdminOrderTop':
+            case 'displayBackOfficeFooter':
+                break;
+            default:
+                return '';
         }
+
+        return '';
     }
-    
-    /**
-     * Get id of main menu
-     * @return int Main menu id
-     */
-    public function getMainMenuId()
+
+    public function getWidgetVariables($hookName, array $configuration)
     {
-        $id_menu = (int)Tab::getIdFromClassName('MpModules');
-        return $id_menu;
+        $vars = [];
+        switch ($hookName) {
+            case 'displayAdminOrderMain':
+            case 'displayAdminOrderSide':
+            case 'displayAdminOrderTop':
+            case 'displayBackOfficeFooter':
+                break;
+            default:
+                return [];
+        }
+
+        return $vars;
     }
-    
-    /**
-     * 
-     * @param string $parent Parent tab name
-     * @param type $class_name Class name of the module
-     * @param type $name Display name of the module
-     * @param type $active If true, Tab menu will be shown
-     * @return boolean True if successfull, False otherwise
-     */
-    public function installTab($parent, $class_name, $name, $active = 1)
+
+    public function hookActionAdminControllerSetMedia()
     {
-        // Create new admin tab
-        $tab = new Tab();
-        $id_parent = (int)Tab::getIdFromClassName($parent);
-        PrestaShopLoggerCore::addLog('Install main menu: id=' . (int)$id_parent);
-        if (!$id_parent) {
-            $id_parent = $this->installMainMenu();
-            if (!$id_parent) {
-                $this->_errors[] = $this->l('Unable to install main module menu tab.');
-                return false;
-            }
-            PrestaShopLoggerCore::addLog('Created main menu: id=' . (int)$id_parent);
+        $controller = Tools::strtolower(Tools::getValue('controller'));
+        $id_order = (int) Tools::getValue('id_order');
+
+        if ($controller == 'adminorders' && !$id_order) {
+            $this->context->controller->addJS([
+                $this->_path . 'views/js/summaryPanel/summaryPanel.js',
+                $this->_path . 'views/js/notePanel/notePanel.js',
+                $this->_path . 'views/js/notePanel/notePanelAttachment.js',
+                $this->_path . 'views/js/notePanel/bindNoteAttachment.js',
+                $this->_path . 'views/js/notePanel/bindNoteFlags.js',
+                $this->_path . 'views/js/notePanel/bindSearchBar.js',
+            ]);
         }
-        $tab->id_parent = (int)$id_parent;
-        $tab->name      = array();
-        
-        foreach (Language::getLanguages(true) as $lang) {
-            $tab->name[$lang['id_lang']] = $name;
-        }
-        
-        $tab->class_name = $class_name;
-        $tab->module     = $this->name;
-        $tab->active     = $active;
-        
-        if (!$tab->add()) {
-            $this->_errors[] = $this->l('Error during Tab install.');
-            return false;
-        }
-        return true;
     }
-    
-    /**
-     * 
-     * @param string pe $class_name Class name of the module
-     * @return boolean True if successfull, False otherwise
-     */
-    public function uninstallTab($class_name)
+
+    public function hookActionOrderGridQueryBuilderModifier($params)
     {
-        $id_tab = (int)Tab::getIdFromClassName($class_name);
-        if ($id_tab) {
-            $tab = new Tab((int)$id_tab);
-            $result = $tab->delete();
-            if (!$result) {
-                $this->_errors[] = $this->l('Unable to remove module menu tab.');
+        /** @var \Doctrine\DBAL\Query\QueryBuilder $searchQueryBuilder */
+        $searchQueryBuilder = $params['search_query_builder'];
+
+        if ($searchQueryBuilder) {
+            $skip_os = $this->getForbiddenOs();
+            // copio in un'altra variabile
+            $query = clone $searchQueryBuilder;
+
+            // 1. Modifica la SELECT originale per ottenere la somma
+            $query->select('SUM(o.total_paid_tax_incl) as total_order');
+            $query->andWhere('o.current_state NOT IN (' . implode(',', $skip_os) . ')');
+
+            // 2. Esegui la query SENZA limiti per ottenere il totale complessivo
+            $limit = $query->getMaxResults();
+            $query->setMaxResults(null);
+            $totalResult = $query->execute()->fetchAssociative();
+            $totalOrdersNoLimit = $totalResult['total_order'] ?? 0;
+            // 3. Esegui la query con i limiti originali
+            $query->select('o.total_paid_tax_incl as total_order');
+            $query->setMaxResults($limit);
+            $totalResult = $query->execute()->fetchAllAssociative();
+            $totalOrdersLimit = 0;
+            if ($totalResult) {
+                foreach ($totalResult as $result) {
+                    $totalOrdersLimit += (float) $result['total_order'];
+                }
             }
-            return $result;
+
+            // 4. Puoi salvare il totale in qualche variabile globale o usarlo come necessario
+            $this->context->smarty->assign('global_order_total_no_limit', $totalOrdersNoLimit);
+            $this->context->smarty->assign('global_order_total_limit', $totalOrdersLimit);
+
+            // Inserisco i cookie dei totali per lòeggerli successivamente
+            $cookie = $this->context->cookie;
+            $cookie->__set('MPTOTALORDERS_NOLIMIT', $totalOrdersNoLimit);
+            $cookie->__set('MPTOTALORDERS_LIMIT', $totalOrdersLimit);
+            $cookie->write();
         }
     }
-    
-    public function hookDisplayBackOfficeHeader()
-	{
-		$ctrl = $this->context->controller;
-		if ($ctrl instanceof AdminController && method_exists($ctrl, 'addCss')) {
-            $ctrl->addCss($this->_path . 'views/css/icon-menu.css');
+
+    public function hookDisplayAdminEndContent($params)
+    {
+        $controller = Tools::strtolower(Tools::getValue('controller'));
+        if ($controller != 'adminorders') {
+            return;
         }
-        if ($ctrl instanceof AdminController && method_exists($ctrl, 'addJS')) {
-            $ctrl->addJs($this->_path . 'views/js/getContent.js');
-        }
-	}
-    
+        $cookie = $this->context->cookie;
+        $totalNolimit = (float) $cookie->__get('MPTOTALORDERS_NOLIMIT');
+        $totalLimit = (float) $cookie->__get('MPTOTALORDERS_LIMIT');
+
+        $formattedPriceLimit = $this->context->getCurrentLocale()->formatPrice(
+            $totalLimit,
+            $this->context->currency->iso_code // EUR, USD, ecc.
+        );
+        $formattedPriceNolimit = $this->context->getCurrentLocale()->formatPrice(
+            $totalNolimit,
+            $this->context->currency->iso_code // EUR, USD, ecc.
+        );
+
+        $tpl = $this->getLocalPath() . 'views/templates/hook/totalOrdersBadge.tpl';
+        $template = $this->context->smarty->createTemplate($tpl, $this->context->smarty);
+        $template->assign([
+            'totalSearch' => $formattedPriceNolimit,
+            'totalPage' => $formattedPriceLimit,
+        ]);
+
+        return $template->fetch();
+    }
+
+    private function getTotalSearch()
+    {
+        return 123456;
+    }
+
+    private function getTotalPage()
+    {
+        return 23564;
+    }
+
     public function getContent()
     {
-        $this->displayMessage = '';
-        if (Tools::isSubmit('ajax') && !empty(Tools::getValue('action', ''))) {
-            $action = 'ajaxProcess' . Tools::getValue('action', '');
-            $this->$action();
-            exit();
+        $message = '';
+        $message_type = 'success';
+        if (Tools::isSubmit('submitSaveConfig')) {
+            $this->setForbiddenOs(Tools::getValue('forbidden_os'));
+            $message = $this->displayConfirmation($this->l('Configuration updated'));
         }
-        if (Tools::isSubmit('submitForm')) {
-            $values = Tools::getAllValues();
-            ConfigurationCore::updateValue('mpexpdoc_input_customer_prefix', $values['input_text_customer_prefix']);
-            ConfigurationCore::updateValue('mpexpdoc_input_id_order', $values['input_text_id_order']);
-            ConfigurationCore::updateValue('mpexpdoc_input_id_invoice', $values['input_text_id_invoice']);
-            ConfigurationCore::updateValue('mpexpdoc_input_id_return', $values['input_text_id_return']);
-            ConfigurationCore::updateValue('mpexpdoc_input_id_slip', $values['input_text_id_slip']);
-            ConfigurationCore::updateValue('mpexpdoc_input_id_delivery', $values['input_text_id_delivery']);
-            $this->displayMessage = $this->displayConfirmation($this->l('Configuration saved.'));
-        }
-        return $this->displayMessage . $this->initForm();
-    }
-    
-    protected function initForm()
-    {
-        $fields_form = array(
-            'form' => array(
-                'legend' => array(
-                    'title' => $this->l('Export configuration'),
-                    'icon' => 'icon-cogs',
-                ),
-                'input' => array(
-                    array(
-                        'required' => false,
-                        'type' => 'text',
-                        'name' => 'input_text_customer_prefix',
-                        'label' => $this->l('Customer prefix'),
-                        'desc' => $this->l('Please insert the customer prefix'),
-                        'prefix' => '<i class="icon-chevron-right"></i>',
-                        'suffix' => '<i class="icon-pencil"></i>',
-                        'class' => 'input fixed-width-sm',
-                    ),
-                    array(
-                        'required' => false,
-                        'type' => 'text',
-                        'name' => 'input_text_id_order',
-                        'label' => $this->l('Document type: Order'),
-                        'desc' => $this->l('Please insert Document type for orders'),
-                        'prefix' => '<i class="icon-chevron-right"></i>',
-                        'suffix' => '<i class="icon-pencil"></i>',
-                        'class' => 'input fixed-width-sm text-right',
-                    ),
-                    array(
-                        'required' => false,
-                        'type' => 'text',
-                        'name' => 'input_text_id_invoice',
-                        'label' => $this->l('Document type: Invoice'),
-                        'desc' => $this->l('Please insert Document type for invoices'),
-                        'prefix' => '<i class="icon-chevron-right"></i>',
-                        'suffix' => '<i class="icon-pencil"></i>',
-                        'class' => 'input fixed-width-sm text-right',
-                    ),
-                    array(
-                        'required' => false,
-                        'type' => 'text',
-                        'name' => 'input_text_id_return',
-                        'label' => $this->l('Document type: Return'),
-                        'desc' => $this->l('Please insert Document type for returns'),
-                        'prefix' => '<i class="icon-chevron-right"></i>',
-                        'suffix' => '<i class="icon-pencil"></i>',
-                        'class' => 'input fixed-width-sm text-right',
-                    ),
-                    array(
-                        'required' => false,
-                        'type' => 'text',
-                        'name' => 'input_text_id_slip',
-                        'label' => $this->l('Document type: Slip'),
-                        'desc' => $this->l('Please insert Document type for slips'),
-                        'prefix' => '<i class="icon-chevron-right"></i>',
-                        'suffix' => '<i class="icon-pencil"></i>',
-                        'class' => 'input fixed-width-sm text-right',
-                    ),
-                    array(
-                        'required' => false,
-                        'type' => 'text',
-                        'name' => 'input_text_id_delivery',
-                        'label' => $this->l('Document type: Delivery'),
-                        'desc' => $this->l('Please insert Document type for deliveries'),
-                        'prefix' => '<i class="icon-chevron-right"></i>',
-                        'suffix' => '<i class="icon-pencil"></i>',
-                        'class' => 'input fixed-width-sm text-right',
-                    ),
-                    array(
-                        'required' => true,
-                        'type' => 'select',
-                        'name' => 'input_select_payment_modules',
-                        'label' => $this->l('Payment modules'),
-                        'desc' => $this->l('Select the payment module.'),
-                        'prefix' => '<i class="icon-chevron-right"></i>',
-                        'suffix' => '<i class="icon-list-ul"></i>',
-                        'class' => 'input fixed-width-sm',
-                        'options' => array(
-                            'query' => $this->getPaymentModuleList(),
-                            'id' => 'id',
-                            'name' => 'name',
-                        ),
-                    ),
-                    array(
-                        'required' => false,
-                        'type' => 'text',
-                        'name' => 'input_text_payment_display',
-                        'label' => $this->l('Display export name'),
-                        'desc' => $this->l('Please insert export name for the selected payment module.'),
-                        'prefix' => '<i class="icon-chevron-right"></i>',
-                        'suffix' => '<i class="icon-pencil"></i>',
-                        'class' => 'input fixed-width-xxl',
-                    ),
-                ),
-                'buttons' => array(
-                    'display_name' => array(
-                        'title' => $this->l('Save display payment name'),
-                        'href' => 'javascript:void(0);',
-                        'class' => 'pull-right',
-                        'icon' => 'process-icon-new',
-                        'name' => 'input_btn_save_payment_name',
-                        'id' => 'input_btn_save_payment_name',
-                    ),
-                ),
-                'submit' => array(
-                    'title' => $this->l('Save'),
-                    'icon' => 'process-icon-save'
-                ),
-            ),
-        );
-        
-        $helper = new HelperFormCore();
-        $helper->table = '';
-        $helper->default_form_language = (int)$this->id_lang;
-        $helper->allow_employee_form_lang = (int) Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANGUAGE');
-        $helper->submit_action = 'submitForm';
-        $helper->currentIndex = $this->link->getAdminLink('AdminModules', false) 
-            . '&configure=' . $this->name
-            . '&tab_module=administration' 
-            . '&module_name=mpexportdocuments';
-        $helper->token = Tools::getAdminTokenLite('AdminModules');
-        if (Tools::isSubmit('submitForm')) {
-            $submit_values = Tools::getAllValues();
-            $output = array();
-            foreach($submit_values as $key=>$value) {
-                if(is_array($value)) {
-                    $output[$key.'[]'] = $value;
-                } else {
-                    $output[$key] = $value;
-                }
-                $output['input_select_payment_modules'] = 0;
-                $output['input_text_payment_display'] = '';
-            }
-            $helper->tpl_vars = array(
-                'fields_value' => $output,
-                'languages' => $this->context->controller->getLanguages(),
-            );
-        } else {
-            $helper->tpl_vars = array(
-                'fields_value' => array(
-                    'input_text_customer_prefix' => ConfigurationCore::get('mpexpdoc_input_customer_prefix'),
-                    'input_text_id_order' => ConfigurationCore::get('mpexpdoc_input_id_order'),
-                    'input_text_id_invoice' => ConfigurationCore::get('mpexpdoc_input_id_invoice'),
-                    'input_text_id_return' => ConfigurationCore::get('mpexpdoc_input_id_return'),
-                    'input_text_id_slip' => ConfigurationCore::get('mpexpdoc_input_id_slip'),
-                    'input_text_id_delivery' => ConfigurationCore::get('mpexpdoc_input_id_delivery'),
-                    'input_select_payment_modules' => 0,
-                    'input_text_payment_display' => '',
-                ),
-                'languages' => $this->context->controller->getLanguages(),
-            );
-        }
-        return $helper->generateForm(array($fields_form));
-    }
-    
-    public function ajaxProcessUpdatePaymentDisplayName()
-    {
-        $payment_module = Tools::getValue('payment_module', ''); 
-        $display_name = Tools::getValue('display_name', '');
-        if (!$payment_module) {
-            print Tools::jsonEncode(
-                array(
-                    'result' => false,
-                    'error_msg' => $this->l('Please select a valid payment method.'),
-                )
-            );
-            exit();
-        }
-        if (!$display_name) {
-            print Tools::jsonEncode(
-                array(
-                    'result' => false,
-                    'error_msg' => $this->l('Please insert a valid display name for this payment method.'),
-                    'title' => $this->l('ERROR'),
-                )
-            );
-            exit();
-        }
-        ConfigurationCore::updateValue('mpexpdoc_' . $payment_module, $display_name);
-        print Tools::jsonEncode(
-            array(
-                'result' => true,
-                'display_msg' => $this->l('Payment method updated.'),
-                'title' => $this->l('Operation done'),
-            )
-        );
-        exit();
-    }
-    
-    public function ajaxProcessGetPaymentDisplayName()
-    {
-        $payment_module = Tools::getValue('payment_module', ''); 
-        $display_name = ConfigurationCore::get('mpexpdoc_' . $payment_module);
-        if (empty($display_name)) {
-            $display_name = '---';
-        }
-        print Tools::jsonEncode(
-            array(
-                'result' => true,
-                'return_value' => $display_name,
-            )
-        );
-        exit();
-    }
-    
-    public function ajaxProcessRefreshPaymentModuleList()
-    {
-        $id_module = (int)Tools::getValue('id_payment_module', '0');
-        $module_name = ConfigurationCore::get('MPEXPORTINVOICES_MODULE'.$id_module);
-        print $module_name;
-        exit();
-    }
-    
-    public function ajaxProcessSaveModuleName()
-    {
-        $id_module = (int)Tools::getValue('id_module', '0');
-        $module_name = Tools::getValue('module_name', '');
-        ConfigurationCore::updateValue('MPEXPORTINVOICES_MODULE'.$id_module, $module_name);
-        print $this->l('Payment module name updated.');
-        exit();
-    }
-    
-    public function getPaymentModuleList()
-    {
-        $payments = array();
+        $tpl = $this->getLocalPath() . 'views/templates/admin/configuration.tpl';
+        $template = $this->context->smarty->createTemplate($tpl, $this->context->smarty);
+        $params = [
+            'forbidden_os' => $this->getForbiddenOs(),
+            'orderStates' => OrderState::getOrderStates($this->id_lang),
+            'message' => $message,
+            'message_type' => $message_type,
+        ];
+        $template->assign($params);
 
-        $modules_list = Module::getPaymentModules();
-        array_push($payments, array(
-            'id' => 0,
-            'name' => $this->l('Choose a payment module'),
-        ));
-        foreach($modules_list as $module)
-            {		
-                array_push($payments, array(
-                    'id' => $module['id_module'],
-                    'name' => $module['name'],
-                ));
-            }
+        return $template->fetch();
+    }
 
-        return $payments;
-    }
-    
-    public function getUrl()
+    public function getForbiddenOs()
     {
-        return $this->_path;
+        $values = Configuration::get(static::FORBIDDEN_OS);
+
+        try {
+            return json_decode($values, true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Exception $e) {
+            return [];
+        }
     }
-    
-    public function getPath()
+
+    public function setForbiddenOs($list)
     {
-        return $this->local_path;
+        if (!is_array($list)) {
+            $list = [$list];
+        }
+
+        return Configuration::updateValue(static::FORBIDDEN_OS, json_encode($list));
     }
 }

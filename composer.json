@@ -1,0 +1,56 @@
+{
+    "version": "1.0.0",
+    "name": "mpsoft/mpexportdocuments",
+    "description": "Export documents in XML format.",
+    "type": "prestashop-module",
+    "license": "AFL-3.0",
+    "authors": [
+        {
+            "name": "Massimiliano Palermo",
+            "email": "maxx.palermo@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "MpSoft\\MpExportDocuments\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=8.1.0",
+        "prestashop/prestashop-webservice-lib": "dev-master",
+        "ext-json": "*",
+        "ext-curl": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "prestashop/php-dev-tools": "^4.0",
+        "phpoffice/phpspreadsheet": "^3.3"
+    },
+    "config": {
+        "platform": {
+            "php": "8.1"
+        },
+        "sort-packages": true,
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "prepend-autoloader": false
+    },
+    "scripts": {
+        "test": "phpunit",
+        "cs-fix": "php-cs-fixer fix"
+    },
+    "extra": {
+        "prestashop": {
+            "name": "mpexportdocuments",
+            "displayName": "MP Export Documents",
+            "version": "1.0.0",
+            "description": "Export documents in XML format.",
+            "author": "Massimiliano Palermo",
+            "tab": "administration",
+            "is_configurable": 1,
+            "need_instance": 0
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
